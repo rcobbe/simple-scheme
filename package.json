@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/rcobbe/simple-scheme/issues"
   },
-  "homepage": "https://github.com/rcobbe/simple-scheme#readme"
+  "homepage": "https://github.com/rcobbe/simple-scheme#readme",
+  "devDependencies": {
+    "tape": "^4.8.0"
+  }
 }
