@@ -1,0 +1,19 @@
+{
+  "name": "simple-scheme",
+  "version": "0.1.0",
+  "description": "Simple Scheme interpreter, as a CESK machine -- JavaScript/Node learning exercise",
+  "main": "simple-scheme.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rcobbe/simple-scheme.git"
+  },
+  "author": "Richard Cobbe <rcobbe@rcobbe.net>",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/rcobbe/simple-scheme/issues"
+  },
+  "homepage": "https://github.com/rcobbe/simple-scheme#readme"
+}
