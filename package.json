@@ -24,7 +24,13 @@
     "eslint-plugin-standard": "^3.0.1",
     "tape": "^4.8.0"
   },
+  "scripts": {
+    "test": "./run-tests.sh"
+  },
   "dependencies": {
     "eslint": "^4.14.0"
+  },
+  "directories": {
+    "test": "tests"
   }
 }
