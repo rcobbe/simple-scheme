@@ -7,10 +7,12 @@
  * Exports:
  *   empty :: List<a>
  *   cons :: a List<a> -> List<a>
+ *   list :: a ... -> List<a>
  *   isEmpty :: List<a> -> Bool
+ *   isList :: b -> Boolean
  *   fromArray :: Array<a> -> List<a>
  *   toArray :: List<a> -> Array<a>
- *   isList :: b -> Boolean
+ *   zip :: List<a> List<b> -> List<[a, b]>
  * 
  * List<a> properties:
  *   car: a  if list is not empty
@@ -33,6 +35,7 @@
  ***********************************************************************/
 
 var eq = require("./equal");
+var pair = require("./pair");
 
 const empty = { 
     [Symbol.iterator]: function iterator() { return mkIter(this); },
@@ -61,6 +64,18 @@ function Cons(x, y) {
 exports.Cons = Cons;
 exports.cons = function cons(x, y) { return new Cons(x, y); };
 
+function fromArray(a) {
+    console.assert(Array.isArray(a));
+    return a.reduceRight(
+        function(accum, x) {
+            return new Cons(x, accum);
+        },
+        empty
+    );
+}
+
+exports.list = function list(...xs) { return fromArray(xs); };
+
 function isEmpty(x) { return (x === empty); }
 
 exports.isEmpty = isEmpty;
@@ -83,15 +98,7 @@ function mkIter(l) {
     };
 }
 
-exports.fromArray = function fromArray(a) {
-    console.assert(Array.isArray(a));
-    return a.reduceRight(
-        function(accum, x) {
-            return new Cons(x, accum);
-        },
-        empty
-    );
-};
+exports.fromArray = fromArray;
 
 function toArray(l) {
     console.assert(isEmpty(l) || l.constructor === Cons);
@@ -104,3 +111,13 @@ function toArray(l) {
 }
 
 exports.toArray = toArray;
+
+exports.zip = function zip(xs, ys) {
+    if (isEmpty(xs) && isEmpty(ys)) {
+        return empty;
+    } else if (isEmpty(xs) || isEmpty(ys)) {
+        throw new Error("zip: argument length mismatch");
+    } else {
+        return new Cons(new pair.Pair(xs.car, ys.car), zip(xs.cdr, ys.cdr));
+    }
+};

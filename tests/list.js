@@ -3,6 +3,7 @@
 var test = require("tape");
 var list = require("../list");
 var eq = require("../equal");
+var p = require("../pair");
 
 const testList = list.cons(1, list.cons(2, list.cons(3, list.empty)));
 
@@ -63,4 +64,19 @@ test("fromArray test", function (t) {
     t.plan(2);
     t.ok(eq.equal(list.empty, list.fromArray([])));
     t.ok(eq.equal(testList, list.fromArray([1, 2, 3])));
+});
+
+test("zip tests", function (t) {
+    t.plan(3);
+    t.ok(eq.equal(list.empty, list.zip(list.empty, list.empty)));
+    t.ok(
+        eq.equal(
+            list.zip(list.list(1, 2, 3), list.list(4, 5, 6)),
+            list.list(new p.Pair(1, 4), new p.Pair(2, 5), new p.Pair(3, 6))
+        )
+    );
+    t.throws(
+        () => list.zip(list.empty, list.list(1, 2, 3)),
+        /argument length mismatch/
+    );
 });
