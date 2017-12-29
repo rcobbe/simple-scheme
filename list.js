@@ -10,10 +10,13 @@
  *   isEmpty :: List<a> -> Bool
  *   fromArray :: Array<a> -> List<a>
  *   toArray :: List<a> -> Array<a>
+ *   isList :: b -> Boolean
  * 
  * List<a> properties:
  *   car: a  if list is not empty
  *   cdr: list<a>  if list is not empty
+ *   toString :: () -> String
+ *   equal :: b -> Boolean
  *   map: (a -> b) -> List<b>
  * 
  * List<a> implements the Iterable protocol.
@@ -29,33 +32,41 @@
  *
  ***********************************************************************/
 
+var eq = require("./equal");
+
 const empty = { 
     [Symbol.iterator]: function iterator() { return mkIter(this); },
     toString: function toString() { return "()"; },
+    equal: function(x) { return x === empty; },
     map: function() { return empty; },
 };
 
 exports.empty = empty;
 
-function cons(x, y) { 
-    return {
-        car: x,
-        cdr: y,
-        [Symbol.iterator]: function iterator() { return mkIter(this); },
-        toString: function toString() {
-            let a = toArray(this);
-            let strs = a.map(x => x.toString());
-            return "(" + strs.join(", ") + ")";
-        },
-        map: function map(f) { return cons(f(x), y.map(f)); },
-    }; 
+function Cons(x, y) {
+    this.car = x;
+    this.cdr = y;
+    this[Symbol.iterator] = function iterator() { return mkIter(this); };
+    this.toString = function toString() {
+        let a = toArray(this);
+        let strs = a.map(x => x.toString());
+        return "(" + strs.join(", ") + ")";
+    };
+    this.equal = function equal(rhs) {
+        return rhs.constructor === Cons && eq.equal(this.car, rhs.car) && eq.equal(this.cdr, rhs.cdr);
+    };
+    this.map = function map(f) { return new Cons(f(x), y.map(f)); };
 }
 
-exports.cons = cons;
+exports.Cons = Cons;
+exports.cons = function cons(x, y) { return new Cons(x, y); };
 
 function isEmpty(x) { return (x === empty); }
 
 exports.isEmpty = isEmpty;
+exports.isList = function(x) { 
+    return x !== null && x !== undefined && (x === empty || x.constructor === Cons);
+};
 
 function mkIter(l) {
     return {
@@ -73,15 +84,17 @@ function mkIter(l) {
 }
 
 exports.fromArray = function fromArray(a) {
+    console.assert(Array.isArray(a));
     return a.reduceRight(
         function(accum, x) {
-            return cons(x, accum);
+            return new Cons(x, accum);
         },
         empty
     );
 };
 
 function toArray(l) {
+    console.assert(isEmpty(l) || l.constructor === Cons);
     let result = [];
     while (!isEmpty(l)) {
         result.push(l.car);
