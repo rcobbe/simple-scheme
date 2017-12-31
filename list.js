@@ -19,7 +19,10 @@
  *   cdr: list<a>  if list is not empty
  *   toString :: () -> String
  *   equal :: b -> Boolean
- *   map: (a -> b) -> List<b>
+ *   map :: (a -> b) -> List<b>
+ *   foreach :: (a -> b) -> ()
+ *   reduce :: (b a -> b) b -> b            foldl
+ *   reduceRight :: (b a -> b) b -> b       foldr
  * 
  * List<a> implements the Iterable protocol.
  * 
@@ -42,6 +45,9 @@ const empty = {
     toString: function toString() { return "()"; },
     equal: function(x) { return x === empty; },
     map: function() { return empty; },
+    foreach: function() { },
+    reduce: function reduce(f, base) { return base; },
+    reduceRight: function reduceRight(f, base) { return base; }
 };
 
 exports.empty = empty;
@@ -59,6 +65,19 @@ function Cons(x, y) {
         return rhs.constructor === Cons && eq.equal(this.car, rhs.car) && eq.equal(this.cdr, rhs.cdr);
     };
     this.map = function map(f) { return new Cons(f(x), y.map(f)); };
+    this.foreach = function foreach(f) { f(this.car); this.cdr.foreach(f); };
+    this.reduce = function reduce(f, base) {
+        let accum = base;
+        let current = this;
+        while (current !== empty) {
+            accum = f(accum, current.car);
+            current = current.cdr;
+        }
+        return accum;
+    };
+    this.reduceRight = function reduceRight(f, base) {
+        return f(this.cdr.reduceRight(f, base), this.car);
+    };
 }
 
 exports.Cons = Cons;

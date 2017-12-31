@@ -80,3 +80,41 @@ test("zip tests", function (t) {
         /argument length mismatch/
     );
 });
+
+test("foreach tests", function(t) {
+    t.plan(2);
+    let array = [];
+    let push = (x => array.push(x));
+
+    list.empty.foreach(push);
+    t.ok(eq.equal([], array));
+
+    testList.foreach(push);
+    t.ok(eq.equal([1, 2, 3], array));
+});
+
+test("reduce tests", function(t) {
+    t.plan(2);
+    let f = (x, y) => list.cons(y + 1, x);
+
+    t.equal(list.empty.reduce(f, list.empty), list.empty);
+    t.ok(
+        eq.equal(
+            list.list(4, 3, 2),
+            testList.reduce(f, list.empty)
+        )
+    );
+});
+
+test("reduceRight tests", function(t) {
+    let f = (x, y) => list.cons(y + 1, x);
+    t.plan(2);
+
+    t.equal(list.empty.reduceRight(f));
+    t.ok(
+        eq.equal(
+            list.list(2, 3, 4),
+            testList.reduceRight(f, list.empty)
+        )
+    );
+});
