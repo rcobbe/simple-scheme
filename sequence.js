@@ -4,10 +4,12 @@
  * 
  * Functions that apply to general sequences.
  * 
+ * A Sequence<a> is either a List<a> or an Array<a>.
+ * 
  * Exports:
- *   andmap :: (a -> Boolean) Iterable<a> -> Boolean
+ *   andmap :: (a -> Boolean) Sequence<a> -> Boolean
  *     short-circuits
- *   ormap  :: (a -> Boolean) Iterable<a> -> Boolean
+ *   ormap  :: (a -> Boolean) Sequence<a> -> Boolean
  *     short-circuits
  *
  **********************************************************************************/
