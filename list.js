@@ -81,7 +81,13 @@ function Cons(x, y) {
 }
 
 exports.Cons = Cons;
-exports.cons = function cons(x, y) { return new Cons(x, y); };
+
+function isList(x) { 
+    return x !== null && x !== undefined && (x === empty || x.constructor === Cons);
+}
+exports.isList = isList;
+
+exports.cons = function cons(x, y) { console.assert(isList(y)); return new Cons(x, y); };
 
 function fromArray(a) {
     console.assert(Array.isArray(a));
@@ -98,9 +104,6 @@ exports.list = function list(...xs) { return fromArray(xs); };
 function isEmpty(x) { return (x === empty); }
 
 exports.isEmpty = isEmpty;
-exports.isList = function(x) { 
-    return x !== null && x !== undefined && (x === empty || x.constructor === Cons);
-};
 
 function mkIter(l) {
     return {
