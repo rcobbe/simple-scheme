@@ -7,10 +7,12 @@ var eq = require("./equal");
 /***********************************************************************************
  * 
  * Exports:
+ *   isAddr :: a -> Boolean
+ *  
  *   empty :: Store<a>
  *   isStore :: a -> Boolean
  *   alloc :: a Store<a> -> Pair<Addr, Store<a>>
- *   allocLots :: Union<List<a>, Array<a>> Store<a> -> Pair<List<Addr>, Store<a>>
+ *   allocLots :: Reduceable<a> Store<a> -> Pair<List<Addr>, Store<a>>
  *   deref :: Addr Store<a> -> a   throws if addr is not bound
  *   update :: Addr a Store<a> -> Store<a>   throws if addr is not bound
  * 
@@ -36,6 +38,8 @@ function Addr(n) {
     };
     return this;
 }
+
+exports.isAddr = function isAddr(x) { return x !== null && x !== undefined && x.constructor == Addr; };
 
 const nextAddress = Symbol("nextAddress");
 const alist = Symbol("alist");
