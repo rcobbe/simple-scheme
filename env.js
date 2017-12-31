@@ -10,6 +10,7 @@ const bindings = Symbol("bindings");
  * Defines an environment ADT.
  * 
  * Exports:
+ *   isEnv :: a -> Boolean
  *   empty :: Env<key, value>
  *   lookup :: Env<key, value> key -> value
  *      throws if not found
@@ -35,9 +36,13 @@ function Env(bindingList) {
     return this;
 }
 
+function isEnv(x) { return x !== null && x !== undefined && x.constructor == Env; }
+exports.isEnv = isEnv;
+
 exports.empty = new Env(list.empty);
 
 exports.lookup = function lookup(key, env) {
+    console.assert(isEnv(env));
     for (var b of env[bindings]) {
         if (b.fst === key) {
             return b.snd;
@@ -47,7 +52,7 @@ exports.lookup = function lookup(key, env) {
 };
 
 function extend(key, value, env) {
-    console.assert(env !== null && env !== undefined && env.constructor === Env);
+    console.assert(isEnv(env));
     return new Env(list.cons(new p.Pair(key, value), env[bindings]));
 }
 
