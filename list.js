@@ -42,12 +42,12 @@ function cons(x, y) {
         get car() { return x; },
         get cdr() { return y; },
         [Symbol.iterator]: function iterator() { return mkIter(this); },
-        toString: function toString() {
+        toString() {
             let a = toArray(this);
             let strs = a.map(x => x.toString());
             return "(" + strs.join(", ") + ")";
         },
-        map: function map(f) { return cons(f(x), y.map(f)); },
+        map(f) { return cons(f(x), y.map(f)); },
     }; 
 }
 
