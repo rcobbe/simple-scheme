@@ -8,6 +8,7 @@
  *   empty :: List<a>
  *   cons :: a List<a> -> List<a>
  *   isEmpty :: List<a> -> Bool
+ *   isList :: a -> Bool
  *   fromArray :: Array<a> -> List<a>
  *   toArray :: List<a> -> Array<a>
  * 
@@ -39,6 +40,7 @@ exports.empty = empty;
 
 function cons(x, y) { 
     return {
+        get constructor() { return cons; },
         get car() { return x; },
         get cdr() { return y; },
         [Symbol.iterator]: function iterator() { return mkIter(this); },
@@ -54,8 +56,12 @@ function cons(x, y) {
 exports.cons = cons;
 
 function isEmpty(x) { return (x === empty); }
-
 exports.isEmpty = isEmpty;
+
+function isList(x) { 
+    return x !== null && x !== undefined && (x === empty || x.constructor === cons);
+}
+exports.isList = isList;
 
 function mkIter(l) {
     return {
