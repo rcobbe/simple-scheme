@@ -18,20 +18,22 @@ function listEqual(l1, l2) {
 }
 
 test("iterator test", function (t) {
-    let array = [];
-
     t.plan(2);
-
-    for (let x of testList) {
-        array.push(x);
+    {
+        let array = [];
+        for (let x of testList) {
+            array.push(x);
+        }
+        t.deepEqual([1, 2, 3], array);
     }
-    t.deepEqual([1, 2, 3], array);
 
-    let array2 = [];
-    for (let x of list.empty) {
-        array.push(x);
+    {
+        let array = [];
+        for (let x of list.empty) {
+            array.push(x);
+        }
+        t.deepEqual([], array);
     }
-    t.deepEqual([], array2);
 });
 
 test("toString test", function (t) {
