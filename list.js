@@ -39,8 +39,8 @@ exports.empty = empty;
 
 function cons(x, y) { 
     return {
-        car: x,
-        cdr: y,
+        get car() { return x; },
+        get cdr() { return y; },
         [Symbol.iterator]: function iterator() { return mkIter(this); },
         toString: function toString() {
             let a = toArray(this);
