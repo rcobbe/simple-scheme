@@ -79,6 +79,7 @@ function mkIter(l) {
 }
 
 exports.fromArray = function fromArray(a) {
+    console.assert(Array.isArray(a));
     return a.reduceRight(
         function(accum, x) {
             return cons(x, accum);
@@ -88,6 +89,7 @@ exports.fromArray = function fromArray(a) {
 };
 
 function toArray(l) {
+    console.assert(isList(l));
     let result = [];
     while (!isEmpty(l)) {
         result.push(l.car);
