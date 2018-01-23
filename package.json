@@ -3,9 +3,6 @@
   "version": "0.1.0",
   "description": "Simple Scheme interpreter, as a CESK machine -- JavaScript/Node learning exercise",
   "main": "simple-scheme.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/rcobbe/simple-scheme.git"
@@ -22,9 +19,16 @@
     "eslint-plugin-node": "^5.2.1",
     "eslint-plugin-promise": "^3.6.0",
     "eslint-plugin-standard": "^3.0.1",
+    "tap-dot": "^1.0.5",
     "tape": "^4.8.0"
+  },
+  "scripts": {
+    "test": "./run-tests.sh"
   },
   "dependencies": {
     "eslint": "^4.14.0"
+  },
+  "directories": {
+    "test": "tests"
   }
 }
