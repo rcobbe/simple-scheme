@@ -13,6 +13,7 @@
  *   toArray :: List<a> -> Array<a>
  * 
  * List<a> properties:
+ *   equal: b -> Bool
  *   car: a  if list is not empty
  *   cdr: list<a>  if list is not empty
  *   map: (a -> b) -> List<b>
@@ -30,7 +31,10 @@
  *
  ***********************************************************************/
 
+var eq = require("./equal");
+
 const empty = { 
+    equal(x) { return x === empty; },
     [Symbol.iterator]: function iterator() { return mkIter(this); },
     toString: function toString() { return "()"; },
     map: function() { return empty; },
@@ -44,6 +48,9 @@ function cons(x, y) {
         get constructor() { return cons; },
         get car() { return x; },
         get cdr() { return y; },
+        equal(rhs) {
+            return rhs.constructor === cons && eq.equal(this.car, rhs.car) && this.cdr.equal(rhs.cdr);
+        },
         [Symbol.iterator]: function iterator() { return mkIter(this); },
         toString() {
             let a = toArray(this);

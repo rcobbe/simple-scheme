@@ -2,20 +2,9 @@
 
 var test = require("tape");
 var list = require("../list");
+var eq = require("../equal");
 
 const testList = list.cons(1, list.cons(2, list.cons(3, list.empty)));
-
-// Compares two lists for equality, using === on list elements. 
-function listEqual(l1, l2) {
-    while (!list.isEmpty(l1) && !list.isEmpty(l2)) {
-        if (l1.car !== l2.car) {
-            return false;
-        }
-        l1 = l1.cdr;
-        l2 = l2.cdr;
-    }
-    return (list.isEmpty(l1) && list.isEmpty(l2));
-}
 
 test("iterator test", function (t) {
     t.plan(2);
@@ -42,11 +31,24 @@ test("toString test", function (t) {
     t.equal(testList.toString(), "(1, 2, 3)");
 });
 
+test("equal test", function (t) {
+    let list1 = list.cons(1, list.cons(2, list.cons(3, list.empty)));
+    let list2 = list.cons(1, list.cons(2, list.cons(3, list.empty)));
+    let list3 = list.cons(list1, list.empty);
+    let list4 = list.cons(list2, list.empty);
+    t.plan(5);
+    t.ok(eq.equal(list.empty, list.empty));
+    t.ok(eq.equal(list1, list2));
+    t.notOk(eq.equal(list.empty, list1));
+    t.notOk(eq.equal(list1, list3));
+    t.ok(eq.equal(list3, list4));
+});
+
 test("map test", function (t) {
     t.plan(2);
     t.deepEqual(list.empty, list.empty.map(x => x + 1));
     t.ok(
-        listEqual(
+        eq.equal(
             list.cons(2, list.cons(3, list.cons(4, list.empty))),
             testList.map(x => x + 1)
         )
@@ -61,6 +63,6 @@ test("toArray test", function (t) {
 
 test("fromArray test", function (t) {
     t.plan(2);
-    t.ok(listEqual(list.empty, list.fromArray([])));
-    t.ok(listEqual(testList, list.fromArray([1, 2, 3])));
+    t.ok(eq.equal(list.empty, list.fromArray([])));
+    t.ok(eq.equal(testList, list.fromArray([1, 2, 3])));
 });
