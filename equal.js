@@ -1,7 +1,7 @@
 "use strict";
 
 /*******************************************************************************
- * 
+ *
  * Equality check intended to be similar to Scheme's equal?.  Intended to be
  * an equivalence relation; intended to be defined on all values in the language.
  *
@@ -11,10 +11,10 @@
  *    - x and y are both arrays of the same length, and the corresponding
  *      pairs of elements are equal
  *    - x and y are both NaN
- * 
+ *
  * The equal function never calls an `equal' method with an argument that is
  * null or undefined.
- * 
+ *
  *******************************************************************************/
 exports.equal = function equal(x, y) {
     if (x === y) {

@@ -13,10 +13,10 @@ test("null/undefined test", function (t) {
 var tag = Symbol("tag");
 
 function mkObj(a, b, c) {
-    return { 
-        [tag]: tag, 
-        a: a, 
-        b: b, 
+    return {
+        [tag]: tag,
+        a: a,
+        b: b,
         c: c,
         equal: function (rhs) {
             return Object.prototype.hasOwnProperty.call(rhs, tag) && this.a === rhs.a && this.b === rhs.b;

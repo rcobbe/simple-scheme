@@ -1,13 +1,13 @@
 "use strict";
 
 /******************************************************************************
- * 
+ *
  * Defines the type Pair<a, b>.
- * 
+ *
  * Exports:
  *   pair :: a b -> Pair<a, b>
  *   isPair :: c -> Boolean
- * 
+ *
  * Properties of Pair<a, b>
  *   fst :: a
  *   snd :: b

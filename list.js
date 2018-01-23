@@ -1,9 +1,9 @@
 "use strict";
 
 /************************************************************************
- * 
+ *
  * Inductive list type.
- * 
+ *
  * Exports:
  *   empty :: List<a>
  *   cons :: a List<a> -> List<a>
@@ -11,15 +11,15 @@
  *   isList :: a -> Bool
  *   fromArray :: Array<a> -> List<a>
  *   toArray :: List<a> -> Array<a>
- * 
+ *
  * List<a> properties:
  *   equal: b -> Bool
  *   car: a  if list is not empty
  *   cdr: list<a>  if list is not empty
  *   map: (a -> b) -> List<b>
- * 
+ *
  * List<a> implements the Iterable protocol.
- * 
+ *
  * XXX I've implemented the toString method on the List objects to return a
  * human-readable form of the list.  I'm a little nervous about this, since
  * I'm not sure when toString gets called or if other code depends on the
@@ -33,7 +33,7 @@
 
 var eq = require("./equal");
 
-const empty = { 
+const empty = {
     equal(x) { return x === empty; },
     [Symbol.iterator]: function iterator() { return mkIter(this); },
     toString: function toString() { return "()"; },
@@ -42,7 +42,7 @@ const empty = {
 
 exports.empty = empty;
 
-function cons(x, y) { 
+function cons(x, y) {
     console.assert(isList(y), "cons: expected list as second arg; got %s", y);
     return {
         get constructor() { return cons; },
@@ -58,7 +58,7 @@ function cons(x, y) {
             return "(" + strs.join(", ") + ")";
         },
         map(f) { return cons(f(x), y.map(f)); },
-    }; 
+    };
 }
 
 exports.cons = cons;
@@ -66,7 +66,7 @@ exports.cons = cons;
 function isEmpty(x) { return (x === empty); }
 exports.isEmpty = isEmpty;
 
-function isList(x) { 
+function isList(x) {
     return x !== null && x !== undefined && (x === empty || x.constructor === cons);
 }
 exports.isList = isList;
