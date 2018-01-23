@@ -12,8 +12,8 @@
  *      pairs of elements are equal
  *    - x and y are both NaN
  * 
- * An implementation of the equal method can assume that its argument is neither
- * null nor undefined.
+ * The equal function never calls an `equal' method with an argument that is
+ * null or undefined.
  * 
  *******************************************************************************/
 exports.equal = function equal(x, y) {
