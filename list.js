@@ -39,6 +39,7 @@ const empty = {
 exports.empty = empty;
 
 function cons(x, y) { 
+    console.assert(isList(y), "cons: expected list as second arg; got %s", y);
     return {
         get constructor() { return cons; },
         get car() { return x; },
@@ -79,7 +80,7 @@ function mkIter(l) {
 }
 
 exports.fromArray = function fromArray(a) {
-    console.assert(Array.isArray(a));
+    console.assert(Array.isArray(a), "fromArray: expected array, got %s", a);
     return a.reduceRight(
         function(accum, x) {
             return cons(x, accum);
@@ -89,7 +90,7 @@ exports.fromArray = function fromArray(a) {
 };
 
 function toArray(l) {
-    console.assert(isList(l));
+    console.assert(isList(l), "toArray: expected list, got %s", l);
     let result = [];
     while (!isEmpty(l)) {
         result.push(l.car);
