@@ -66,3 +66,11 @@ test("fromArray test", function (t) {
     t.ok(eq.equal(list.empty, list.fromArray([])));
     t.ok(eq.equal(testList, list.fromArray([1, 2, 3])));
 });
+
+test("sort tests", function (t) {
+    let inputList = list.list(3, 1, 4, 2, 1);
+    t.plan(2);
+
+    t.ok(eq.equal(list.list(1, 1, 2, 3, 4), inputList.sort()));
+    t.ok(eq.equal(list.list(4, 3, 2, 1, 1), inputList.sort((x, y) => y - x)));
+});

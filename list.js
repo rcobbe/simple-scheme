@@ -11,12 +11,18 @@
  *   isList :: a -> Bool
  *   fromArray :: Array<a> -> List<a>
  *   toArray :: List<a> -> Array<a>
+ *   list :: a... -> List<a>
  *
  * List<a> properties:
- *   equal: b -> Bool
- *   car: a  if list is not empty
- *   cdr: list<a>  if list is not empty
- *   map: (a -> b) -> List<b>
+ *   equal :: b -> Bool
+ *   car :: a  if list is not empty
+ *   cdr :: list<a>  if list is not empty
+ *   map :: (a -> b) -> List<b>
+ *   sort :: (a a -> Number) -> List<a>
+ *     returns copy of list sorted according to supplied comparison function.
+ *     Put x {before, after, equiv to} y when comp(x, y) returns a number
+ *     {less than, greater than, equal to} 0.  Results are defined only when
+ *     compare(x, y) always returns the same value for any two values for x, y.
  *
  * List<a> implements the Iterable protocol.
  *
@@ -36,8 +42,9 @@ var eq = require("./equal");
 const empty = {
     equal(x) { return x === empty; },
     [Symbol.iterator]: function iterator() { return mkIter(this); },
-    toString: function toString() { return "()"; },
-    map: function() { return empty; },
+    toString() { return "()"; },
+    map() { return empty; },
+    sort() { return empty; }
 };
 
 exports.empty = empty;
@@ -58,6 +65,12 @@ function cons(x, y) {
             return "(" + strs.join(", ") + ")";
         },
         map(f) { return cons(f(x), y.map(f)); },
+        sort(compare) {
+            if (compare === undefined) {
+                compare = (x, y) => { if (x < y) { return -1; } else if (x > y) { return 1; } else { return 0; } };
+            }
+            return fromArray(toArray(this).sort(compare));
+        }
     };
 }
 
@@ -86,7 +99,7 @@ function mkIter(l) {
     };
 }
 
-exports.fromArray = function fromArray(a) {
+function fromArray(a) {
     console.assert(Array.isArray(a), "fromArray: expected array, got %s", a);
     return a.reduceRight(
         function(accum, x) {
@@ -94,7 +107,8 @@ exports.fromArray = function fromArray(a) {
         },
         empty
     );
-};
+}
+exports.fromArray = fromArray;
 
 function toArray(l) {
     console.assert(isList(l), "toArray: expected list, got %s", l);
@@ -105,5 +119,6 @@ function toArray(l) {
     }
     return result;
 }
-
 exports.toArray = toArray;
+
+exports.list = function(...xs) { return fromArray(xs); };
