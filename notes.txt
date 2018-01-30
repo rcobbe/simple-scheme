@@ -1,0 +1,43 @@
+Still struggling with finding the idiomatic way to define types,
+particularly sum-of-product types.  (JS being JS, there may not be one
+single idiomatic way.)
+
+One possibility is to use the new ES6 class mechanism, with something like
+the following:
+
+class List {
+  // Is the forward reference legal?
+  // Is it worth defining cons as a method?  x.cons(1).cons(2).cons(3)
+  //   isn't as pleasant to read as cons(3, cons(2, cons(1, x))); the
+  //   order of the elements is "backwards".
+  cons(x) { return new Cons(x, this); }
+};
+var Empty = class Empty extends List  {
+  length() { return 0; }
+  map(f) { return this; }
+};
+class Cons extends List {
+  constructor(head, tail) {
+    console.assert(tail instanceof List);
+    this._head = head;
+    this._tail = tail;
+  }
+  // is it worth using getters to ensure immutability, given that
+  // _head & _tail are still accessible and mutable?
+  get head() { return this._head; }
+  get tail() { return this._tail; }
+  length() { return 1 + this._tail.length(); }
+  map(f) { return new Cons(f(this._head), this._tail.map(f)); }
+}
+
+What's the benefit of the List class?  Allows users to write (x instanceof
+List), but also allows them to extend List with their own subclasses, which
+may not implement the same interface.
+
+Can we reasonably put any methods beyond cons in the List type?  Well, if
+we define foldr on Empty & Cons, we can write map in List in terms of
+foldr.
+
+Is this an improvement over using functions to define truly private
+members?  Or am I just unwilling to give up on encapsulation, even though
+that's pretty explicitly not one of JS's properties (or goals)?
