@@ -46,39 +46,46 @@ function isAddr(x) {
 }
 exports.isAddr = isAddr;
 
-// store :: Addr List<Pair<Addr, a>> List<Pair<Addr, a>> -> Store<a>
+// Entry<a> ::= { addr :: Addr, val :: a, hidden :: Bool }
+// Hidden entries work just like normal entries, except that Store's toString method
+// doesn't print them.
+
+function compareEntry(e1, e2) { return e1.addr.compare(e2.addr); }
+
+// store :: Addr List<Entry<a>> -> Store<a>
 // Domains of two lists must be disjoint.  Only difference is that toString
 // doesn't print contents of hiddenAddrValList, to avoid cluttering output
 // with unnecessary details (intended primarily for builtin primitives).
-function store(nextAddr, addrValList, hiddenAddrValList) {
+function store(nextAddr, entryList) {
     console.assert(isAddr(nextAddr));
-    console.assert(list.isList(addrValList));
-    console.assert(list.isList(hiddenAddrValList));
-    // could also assert that domains of addrValList and hiddenAddrValList are disjoint, but
-    // this requires a lot of additional infrastructure (sets, ordering on addresses, etc.)
+    console.assert(list.isList(entryList));
+    assertUnique(entryList);
     return {
         get constructor() { return store; },
         // as above, would prefer these to be private, but have to expose them for equal()
         get _nextAddr() { return nextAddr; },
-        get _addrValList() { return addrValList; },
-        get _hiddenAddrValList() { return hiddenAddrValList; },
+        get _entryList() { return entryList; },
         toString() {
-            return "Store(nextAddr = " + nextAddr.toString() +
-                ", addrValList = " + addrValList.toString() + ")";
+            let result = "Store:\n" +
+                "  nextAddr: " + nextAddr.toString() + "\n" +
+                "  entries: \n";
+            for (let {addr, val, hidden} of entryList) {
+                if (!hidden) {
+                    result += "    " + addr.toString() + ": " + val.toString() + "\n";
+                }
+            }
+            return result;
         },
         equal(rhs) {
-            let cmp = (a, b) => a.compare(b);
             return isStore(rhs) && (
                 eq.equal(nextAddr, rhs._nextAddr) &&
-                eq.equal(addrValList.sort(cmp), rhs._addrValList.sort(cmp)) &&
-                eq.equal(hiddenAddrValList.sort(cmp), rhs._hiddenAddrValList.sort(cmp))
+                eq.equal(entryList.sort(compareEntry), rhs._entryList.sort(compareEntry))
             );
         },
         alloc(newVal) {
             let a = nextAddr;
             let newNext = nextAddr.succ();
-            let newPair = p.pair(a, newVal);
-            return p.pair(a, store(newNext, list.cons(newPair, addrValList), hiddenAddrValList));
+            return p.pair(a, store(newNext, list.cons({ addr: a, val: newVal, hidden: false }, entryList)));
         },
         allocLots(newVals) {
             return newVals.reduceRight(
@@ -92,6 +99,22 @@ function store(nextAddr, addrValList, hiddenAddrValList) {
                 },
                 p.pair(list.empty, this)
             );
+        },
+        deref(addr) {
+            for (let x of this.addrValList) {
+                if (x.fst === addr) {
+                    return x.snd;
+                }
+            }
+            for (let x of this.hiddenAddrValList) {
+                if (x.first === addr) {
+                    return x.snd;
+                }
+            }
+            throw new Error("store.deref: address " + addr + " is not allocated");
+        },
+        update(addr, newVal) {
+
         }
     };
 }
@@ -117,3 +140,17 @@ exports.baseStore = function baseStore(baseVals) {
 
     return store(finalAccum.fst, list.empty, finalAccum.snd);
 };
+
+// assertUnique :: List<Entry<a>> -> ()
+// asserts that all entries in the list have unique addresses.  Uses object identity for comparison, which is
+// fine as long as the only way users can get an address is through the store API.
+function assertUnique(entries) {
+    let s = new Set();
+    for (let { addr } of entries) {
+        if (s.has(addr)) {
+            throw new Error("found duplicate address: " + addr);
+        } else {
+            s.add(addr);
+        }
+    }
+}
