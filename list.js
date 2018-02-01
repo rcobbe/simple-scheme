@@ -23,6 +23,8 @@
  *     Put x {before, after, equiv to} y when comp(x, y) returns a number
  *     {less than, greater than, equal to} 0.  Results are defined only when
  *     compare(x, y) always returns the same value for any two values for x, y.
+ *   reduce :: (b a -> b) b -> b
+ *   reduceRight :: (b a -> b) b -> b
  *
  * List<a> implements the Iterable protocol.
  *
@@ -44,7 +46,9 @@ const empty = {
     [Symbol.iterator]: function iterator() { return mkIter(this); },
     toString() { return "()"; },
     map() { return empty; },
-    sort() { return empty; }
+    sort() { return empty; },
+    reduce(f, initialValue) { return initialValue; },
+    reduceRight(f, initialValue) { return initialValue; }
 };
 
 exports.empty = empty;
@@ -70,6 +74,12 @@ function cons(x, y) {
                 compare = (x, y) => { if (x < y) { return -1; } else if (x > y) { return 1; } else { return 0; } };
             }
             return fromArray(toArray(this).sort(compare));
+        },
+        reduce(f, initialValue) {
+            return this.cdr.reduce(f, f(initialValue, this.car));
+        },
+        reduceRight(f, initialValue) {
+            return f(this.cdr.reduceRight(f, initialValue), this.car);
         }
     };
 }

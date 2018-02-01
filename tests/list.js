@@ -74,3 +74,19 @@ test("sort tests", function (t) {
     t.ok(eq.equal(list.list(1, 1, 2, 3, 4), inputList.sort()));
     t.ok(eq.equal(list.list(4, 3, 2, 1, 1), inputList.sort((x, y) => y - x)));
 });
+
+test("reduce tests", function (t) {
+    let inputList = list.list(1, 2, 3, 4);
+    let f = function(accum, val) { return accum * 10 + val; };
+    t.plan(2);
+    t.equal(0, list.empty.reduce(f, 0));
+    t.equal(1234, inputList.reduce(f, 0));
+});
+
+test("reduceRight", function (t) {
+    let inputList = list.list(1, 2, 3, 4);
+    let f = function(accum, val) { return accum * 10 + val; };
+    t.plan(2);
+    t.equal(0, list.empty.reduceRight(f, 0));
+    t.equal(4321, inputList.reduceRight(f, 0));
+});
