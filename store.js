@@ -20,6 +20,7 @@
  *   equal :: b -> Boolean
  *   alloc :: a -> Pair<Addr, Store<a>>
  *   allocLots :: List<a> -> Pair<List<Addr>, Store<a>>
+ *   allocated :: Addr -> Boolean
  *   deref :: Addr -> a             throws if addr not bound
  *   update :: Addr a -> Store<a>   throws if addr not bound
  *
@@ -49,6 +50,14 @@ exports.isAddr = isAddr;
 // Entry<a> ::= { addr :: Addr, val :: a, hidden :: Bool }
 // Hidden entries work just like normal entries, except that Store's toString method
 // doesn't print them.
+function entry(addr, val, hidden) {
+    return {
+        get addr() { return addr; },
+        get val() { return val; },
+        get hidden() { return hidden; },
+        withValue(newVal) { return entry(addr, newVal, hidden); }
+    };
+}
 
 function compareEntry(e1, e2) { return e1.addr.compare(e2.addr); }
 
@@ -59,7 +68,7 @@ function compareEntry(e1, e2) { return e1.addr.compare(e2.addr); }
 function store(nextAddr, entryList) {
     console.assert(isAddr(nextAddr));
     console.assert(list.isList(entryList));
-    assertUnique(entryList);
+    // XXX assert that all items are entries?
     return {
         get constructor() { return store; },
         // as above, would prefer these to be private, but have to expose them for equal()
@@ -85,7 +94,7 @@ function store(nextAddr, entryList) {
         alloc(newVal) {
             let a = nextAddr;
             let newNext = nextAddr.succ();
-            return p.pair(a, store(newNext, list.cons({ addr: a, val: newVal, hidden: false }, entryList)));
+            return p.pair(a, store(newNext, list.cons(entry(a, newVal, false), entryList)));
         },
         allocLots(newVals) {
             return newVals.reduceRight(
@@ -100,23 +109,38 @@ function store(nextAddr, entryList) {
                 p.pair(list.empty, this)
             );
         },
-        deref(addr) {
-            for (let x of this.addrValList) {
-                if (x.fst === addr) {
-                    return x.snd;
+        allocated(addr) {
+            for (let {addr: a} of entryList) {
+                if (addr === a) {
+                    return true;
                 }
             }
-            for (let x of this.hiddenAddrValList) {
-                if (x.first === addr) {
-                    return x.snd;
+            return false;
+        },
+        deref(addr) {
+            for (let entry of entryList) {
+                if (entry.addr === addr) {
+                    return entry.val;
                 }
             }
             throw new Error("store.deref: address " + addr + " is not allocated");
         },
         update(addr, newVal) {
-
+            return store(nextAddr, updateLoop(entryList, addr, newVal));
         }
     };
+}
+
+// Returns copy of entryList with addr's value updated to newVal.  Throws Error if addr does not appear
+// in entryList.
+function updateLoop(entryList, addr, newVal) {
+    if (list.isEmpty(entryList)) {
+        throw new Error("store.update: address " + addr + " is not allocated");
+    } else if (entryList.car.addr === addr) {
+        return list.cons(entryList.car.withValue(newVal), entryList.cdr);
+    } else {
+        return list.cons(entryList.car, updateLoop(entryList.cdr, addr, newVal));
+    }
 }
 
 function isStore(x) {
@@ -124,33 +148,20 @@ function isStore(x) {
 }
 exports.isStore = isStore;
 
-exports.empty = store(addr(0), list.empty, list.empty);
+exports.empty = store(addr(0), list.empty);
 // Creates base store containing supplied values, as hidden
 exports.baseStore = function baseStore(baseVals) {
     let finalAccum = baseVals.reduce(
-        // accum :: Pair<Addr, List<Pair<Addr, a>; first element is next address to allocate
+        // accum :: Pair<Addr, List<Entry>; first element is next address to allocate
         (accum, val) => {
             let addr = accum.fst;
             let addrValPairs = accum.snd;
             let newAddr = addr.succ();
-            return p.pair(newAddr, list.cons(p.pair(addr, val), addrValPairs));
+            return p.pair(newAddr, list.cons(
+                p.pair(addr, val), addrValPairs));
         },
         p.pair(addr(0), list.empty)
     );
 
-    return store(finalAccum.fst, list.empty, finalAccum.snd);
+    return store(finalAccum.fst, finalAccum.snd);
 };
-
-// assertUnique :: List<Entry<a>> -> ()
-// asserts that all entries in the list have unique addresses.  Uses object identity for comparison, which is
-// fine as long as the only way users can get an address is through the store API.
-function assertUnique(entries) {
-    let s = new Set();
-    for (let { addr } of entries) {
-        if (s.has(addr)) {
-            throw new Error("found duplicate address: " + addr);
-        } else {
-            s.add(addr);
-        }
-    }
-}
