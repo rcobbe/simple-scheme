@@ -90,3 +90,13 @@ test("reduceRight", function (t) {
     t.equal(0, list.empty.reduceRight(f, 0));
     t.equal(4321, inputList.reduceRight(f, 0));
 });
+
+test("append", function (t) {
+    let l1 = list.list(1, 2, 3);
+    let l2 = list.list("x", "y", "z");
+    t.plan(4);
+    t.equal(list.empty, list.empty.append(list.empty));
+    t.ok(eq.equal(list.empty.append(l1), l1));
+    t.ok(eq.equal(l2.append(list.empty), l2));
+    t.ok(eq.equal(l1.append(l2), list.list(1, 2, 3, "x", "y", "z")));
+});

@@ -25,6 +25,7 @@
  *     compare(x, y) always returns the same value for any two values for x, y.
  *   reduce :: (b a -> b) b -> b
  *   reduceRight :: (b a -> b) b -> b
+ *   append :: List<a> -> List<a>
  *
  * List<a> implements the Iterable protocol.
  *
@@ -48,7 +49,8 @@ const empty = {
     map() { return empty; },
     sort() { return empty; },
     reduce(f, initialValue) { return initialValue; },
-    reduceRight(f, initialValue) { return initialValue; }
+    reduceRight(f, initialValue) { return initialValue; },
+    append(ys) { return ys; }
 };
 
 exports.empty = empty;
@@ -80,6 +82,9 @@ function cons(x, y) {
         },
         reduceRight(f, initialValue) {
             return f(this.cdr.reduceRight(f, initialValue), this.car);
+        },
+        append(ys) {
+            return cons(this.car, this.cdr.append(ys));
         }
     };
 }
