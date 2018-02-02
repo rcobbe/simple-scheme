@@ -17,8 +17,8 @@
  * Store<a> properties:
  *   toString :: () -> String
  *   equal :: b -> Boolean
- *   alloc :: a Boolean? -> { store: Store<a>, addr: Addr }
- *   allocLots :: Iterable<a> Boolean? -> { store: Store<a>, addrs: Array<Addr> }
+ *   alloc :: a Boolean? -> { store :: Store<a>, addr :: Addr }
+ *   allocLots :: Iterable<a> Boolean? -> { store :: Store<a>, addrs :: Array<Addr> }
  *   deref :: Addr -> a             throws if addr not bound
  *   update :: Addr a -> Store<a>   throws if addr not bound
  *
