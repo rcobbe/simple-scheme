@@ -100,3 +100,9 @@ test("append", function (t) {
     t.ok(eq.equal(l2.append(list.empty), l2));
     t.ok(eq.equal(l1.append(l2), list.list(1, 2, 3, "x", "y", "z")));
 });
+
+test("reverse", function (t) {
+    t.plan(2);
+    t.equal(list.empty, list.empty.reverse());
+    t.ok(eq.equal(list.list(3, 2, 1), list.list(1, 2, 3).reverse()));
+});

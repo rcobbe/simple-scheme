@@ -26,6 +26,7 @@
  *   reduce :: (b a -> b) b -> b
  *   reduceRight :: (b a -> b) b -> b
  *   append :: List<a> -> List<a>
+ *   reverse :: () -> List<a>
  *
  * List<a> implements the Iterable protocol.
  *
@@ -50,7 +51,8 @@ const empty = {
     sort() { return empty; },
     reduce(f, initialValue) { return initialValue; },
     reduceRight(f, initialValue) { return initialValue; },
-    append(ys) { return ys; }
+    append(ys) { return ys; },
+    reverse() { return empty; }
 };
 
 exports.empty = empty;
@@ -85,6 +87,15 @@ function cons(x, y) {
         },
         append(ys) {
             return cons(this.car, this.cdr.append(ys));
+        },
+        reverse() {
+            let accum = empty;
+            let curr = this;
+            while (curr !== empty) {
+                accum = cons(curr.car, accum);
+                curr = curr.cdr;
+            }
+            return accum;
         }
     };
 }
