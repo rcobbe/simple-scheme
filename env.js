@@ -45,7 +45,7 @@ class Env {
     extendLots(keyValuePairs) {
         let kvp;
         if (Array.isArray(keyValuePairs)) {
-            kvp = list.fromArray(keyValuePairs);
+            kvp = list.fromIterable(keyValuePairs);
         } else if (list.isList(keyValuePairs)) {
             kvp = keyValuePairs;
         } else {

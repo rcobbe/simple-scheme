@@ -9,7 +9,7 @@
  *   cons :: a List<a> -> List<a>
  *   isEmpty :: List<a> -> Bool
  *   isList :: a -> Bool
- *   fromArray :: Array<a> -> List<a>
+ *   fromIterable :: Iterable<a> -> List<a>
  *   toArray :: List<a> -> Array<a>
  *   list :: a... -> List<a>
  *
@@ -42,6 +42,7 @@
  ***********************************************************************/
 
 var eq = require("./equal");
+var iterUtils = require("./iterable-utils");
 
 const empty = {
     equal(x) { return x === empty; },
@@ -77,7 +78,7 @@ function cons(x, y) {
             if (compare === undefined) {
                 compare = (x, y) => { if (x < y) { return -1; } else if (x > y) { return 1; } else { return 0; } };
             }
-            return fromArray(toArray(this).sort(compare));
+            return fromIterable(toArray(this).sort(compare));
         },
         reduce(f, initialValue) {
             return this.cdr.reduce(f, f(initialValue, this.car));
@@ -125,16 +126,18 @@ function mkIter(l) {
     };
 }
 
-function fromArray(a) {
-    console.assert(Array.isArray(a), "fromArray: expected array, got %s", a);
-    return a.reduceRight(
-        function(accum, x) {
-            return cons(x, accum);
-        },
-        empty
+function fromIterable(xs) {
+    console.assert(
+        iterUtils.isIterable(xs),
+        "fromIterable: expected iterable, got %s", xs
     );
+    let accum = empty;
+    for (let x of xs) {
+        accum = cons(x, accum);
+    }
+    return accum.reverse();
 }
-exports.fromArray = fromArray;
+exports.fromIterable = fromIterable;
 
 function toArray(l) {
     console.assert(isList(l), "toArray: expected list, got %s", l);
@@ -147,4 +150,4 @@ function toArray(l) {
 }
 exports.toArray = toArray;
 
-exports.list = function(...xs) { return fromArray(xs); };
+exports.list = function(...xs) { return fromIterable(xs); };

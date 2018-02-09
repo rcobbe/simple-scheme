@@ -61,10 +61,11 @@ test("toArray test", function (t) {
     t.deepEqual(list.toArray(testList), [1, 2, 3]);
 });
 
-test("fromArray test", function (t) {
-    t.plan(2);
-    t.ok(eq.equal(list.empty, list.fromArray([])));
-    t.ok(eq.equal(testList, list.fromArray([1, 2, 3])));
+test("fromIterable test", function (t) {
+    t.plan(3);
+    t.ok(eq.equal(list.empty, list.fromIterable([])));
+    t.ok(eq.equal(testList, list.fromIterable([1, 2, 3])));
+    t.ok(eq.equal(list.list("a", "b", "c"), list.fromIterable("abc")));
 });
 
 test("sort tests", function (t) {
