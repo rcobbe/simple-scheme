@@ -1,0 +1,84 @@
+capitalized words denote sets; lowercase are literals
+
+a ∈ Addr
+ρ ∈ Env (finite function: ID → Addr)
+σ ∈ Store (finite function: Addr → Value)
+x ∈ Identifier
+
+v ∈ Value
+  ::= Real
+    | String
+    | Symbol
+    | null
+    | Boolean
+    | void-value
+    | pair v v
+    | Const
+    | closure Env <x ...> e
+    | Primitive
+    | κ
+    | undefined
+
+e ∈ Expr
+e ::= Real
+    | String
+    | (quote Symbol)
+    | Boolean
+    | x
+    | (lambda (x ...) e)
+    | (let ([x e] ...) e)
+    | (letrec ([x e] ...) e)
+    | (let/cc x e)
+    | (set! x e)
+    | (if e e e)
+    | (and e ...)
+    | (or e ...)
+    | (begin e ...)
+    | (e ...+)
+
+Initial environment establishes bindings for null, void (the function),
+call/cc.
+
+κ ∈ Continuation
+  ::= halt-k
+    | letrec-k ρ x <x ...> <e ...> e κ
+        # evaluating the initializer for a letrec-bound variable
+        #   1: environment for evaluating remaining rhss
+        #   2: identifier whose initializer we're currently evaluating
+        #   3: remaining identifiers
+        #   4: remaining rhss
+        #   5: body
+        #   6: ancestor continuation
+    | set!-k a κ
+        # evaluating rhs of a set!
+    | if-k ρ e e κ
+        # evaluating condition of if
+        # 2: consequent
+        # 3: alternative
+    | and-k ρ <e ...> κ
+        # evaluating subexpr of and; sequence is remaining exprs
+    | or-k ρ <e ...> κ
+        # evaluating subexpr of or; sequence is remaining exprs
+    | begin-k ρ <e ...> κ
+        # evaluting subexpr of begin; sequence is remaining exprs
+    | rator-k ρ <e ...> κ
+        # evaluating 1st subexpr of an application
+    | rand-k ρ Function <v ...> <e ...> κ
+        # evaluating later subexpr of an application
+        # Function is function to be applied
+        # values are arguments evaluated so far, in *reverse* order!
+        # exprs are arg exprs yet to evaluate, in source order
+
+ExprConfig ::= <e, ρ, σ, κ>
+ValueConfig ::= <v, σ, κ>
+
+<n ρ σ κ> where n is a floating-point literal
+   → <r σ κ>
+<s ρ σ κ> where s is a string literal
+   → <s σ κ>
+<(quote s) ρ σ κ> where s is a symbol literal
+   → <s σ κ>
+<b ρ σ κ>  where b is a boolean literal
+   → <b σ κ>
+<x ρ σ κ> → <σ(ρ(x)) σ κ>
+<(lambda (x ...) e) ρ σ κ>
