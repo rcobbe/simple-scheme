@@ -136,59 +136,63 @@ enum EnvValue {
     },
 }
 
-pub fn empty() -> Env {
-    Env(Rc::new(PEnv::Empty))
-}
-
-// Return value bound to `id` in `env`; returns None if binding not found.
-pub fn lookup(env: Env, id: &Id) -> Option<Rc<Value>> {
-    lookup_private(env.0, id)
-}
-
-// Variant of `lookup` that works on the private data type.
-fn lookup_private(env: Rc<PEnv>, id: &Id) -> Option<Rc<Value>> {
-    let env: &PEnv = &env;
-    match env {
-        PEnv::Empty => None,
-        PEnv::Rib(rib_id, EnvValue::Raw(val), _) if id == rib_id => Some(Rc::clone(val)),
-        PEnv::Rib(rib_id, EnvValue::RecFun { env, arg, body }, _) if id == rib_id => {
-            match env.borrow().upgrade() {
-                None => panic!("unable to upgrade RecFun's environment"),
-                Some(e) => Some(Rc::new(Value::Closure(
-                    Env(e),
-                    arg.clone(),
-                    Rc::clone(body),
-                ))),
-            }
-        }
-        PEnv::Rib(_, _, e) => lookup_private(Rc::clone(e), id),
+impl Env {
+    pub fn empty() -> Env {
+        Env(Rc::new(PEnv::Empty))
     }
-}
 
-// Extends `env` with a binding for `id` to a non-recursive function value.
-pub fn extend(id: Id, value: Rc<Value>, env: &Env) -> Env {
-    Env(Rc::new(PEnv::Rib(id, EnvValue::Raw(value), env.0.clone())))
-}
+    // Return value bound to `id` in `self`; returns None if binding not found.
+    pub fn lookup(&self, id: &Id) -> Option<Rc<Value>> {
+        Env::lookup_private(self.0.clone(), id)
+    }
 
-// Extends `env` with a binding for `id` to a recursive function with argument `arg`
-// and body `body`.
-pub fn extend_rec(id: Id, arg: Id, body: Rc<Expr>, env: &Env) -> Env {
-    let new_env = Rc::new(
-        PEnv::Rib(
-            id,
-            EnvValue::RecFun {
-                env: RefCell::new(Weak::new()),
-                arg,
-                body,
+    // Variant of `lookup` that works on the private data type.
+    fn lookup_private(env: Rc<PEnv>, id: &Id) -> Option<Rc<Value>> {
+        let env: &PEnv = &env;
+        match env {
+            PEnv::Empty => None,
+            PEnv::Rib(rib_id, EnvValue::Raw(val), _) if id == rib_id => Some(Rc::clone(val)),
+            PEnv::Rib(rib_id, EnvValue::RecFun { env, arg, body }, _) if id == rib_id => {
+                match env.borrow().upgrade() {
+                    None => panic!("unable to upgrade RecFun's environment"),
+                    Some(e) => Some(Rc::new(Value::Closure(
+                        Env(e),
+                        arg.clone(),
+                        Rc::clone(body),
+                    ))),
+                }
+            }
+            PEnv::Rib(_, _, e) => Env::lookup_private(Rc::clone(e), id),
+        }
+    }
+
+    // Extends `env` with a binding for `id` to a non-recursive function value.
+    // Associated function because calls flow better when the environment to be extended
+    // is the last argument, similar to cons.
+    pub fn extend(id: Id, value: Rc<Value>, env: &Env) -> Env {
+        Env(Rc::new(PEnv::Rib(id, EnvValue::Raw(value), env.0.clone())))
+    }
+
+    // Extends `env` with a binding for `id` to a recursive function with argument `arg`
+    // and body `body`.
+    pub fn extend_rec(id: Id, arg: Id, body: Rc<Expr>, env: &Env) -> Env {
+        let new_env = Rc::new(
+            PEnv::Rib(
+                id,
+                EnvValue::RecFun {
+                    env: RefCell::new(Weak::new()),
+                    arg,
+                    body,
+                },
+                env.0.clone(),
+            ));
+        match &*new_env {
+            PEnv::Rib(_, EnvValue::RecFun { env: env_ptr, .. }, _) => {
+                env_ptr.replace(Rc::downgrade(&new_env));
+                Env(new_env)
             },
-            env.0.clone(),
-        ));
-    match &*new_env {
-        PEnv::Rib(_, EnvValue::RecFun { env: env_ptr, .. }, _) => {
-            env_ptr.replace(Rc::downgrade(&new_env));
-            Env(new_env)
-        },
-        _ => panic!("bad env"),
+            _ => panic!("bad env"),
+        }
     }
 }
 
@@ -198,15 +202,15 @@ mod tests {
 
     #[test]
     fn lookup_in_empty() {
-        assert!(lookup(empty(), &Id::new("x")).is_none())
+        assert!(Env::empty().lookup(&Id::new("x")).is_none())
     }
 
     #[test]
     fn lookup_simple() {
         let val = Rc::new(Value::Int(3));
-        let env = extend(Id::new("x"), Rc::clone(&val), &empty());
+        let env = Env::extend(Id::new("x"), Rc::clone(&val), &Env::empty());
         assert!(
-            match lookup(env, &Id::new("x")) {
+            match env.lookup(&Id::new("x")) {
                 Some(v) => Rc::as_ptr(&v) == Rc::as_ptr(&val),
                 _ => false
             }
@@ -221,9 +225,9 @@ mod tests {
             rator: Rc::new(Expr::Id(id.clone())),
             rand: Rc::new(Expr::Id(arg.clone())),
         });
-        let env = extend_rec(id.clone(), arg.clone(), Rc::clone(&body), &empty());
+        let env = Env::extend_rec(id.clone(), arg.clone(), Rc::clone(&body), &Env::empty());
         assert!(
-            match lookup(env.clone(), &id) {
+            match env.lookup(&id) {
                 None => false,
                 Some(v) => {
                     match &*v {
