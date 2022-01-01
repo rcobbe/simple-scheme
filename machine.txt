@@ -1,9 +1,72 @@
 capitalized words denote sets; lowercase are literals
 
 a ∈ Addr
-ρ ∈ Env (finite function: ID → Addr)
+ρ ∈ Env (finite function: ID → Value)
 σ ∈ Store (finite function: Addr → Value)
 x ∈ Identifier
+
+v ∈ Value
+  ::= Int
+    | String
+    | null
+    | #t
+    | #f
+    | pair v v
+    | closure ρ x e
+    | Primitive
+
+e ∈ Expr
+  ::= Int
+    | String
+    | #t
+    | #f
+    | x
+    | (lambda x e)
+    | (e e)
+    | (let x e e)
+    | (letrec x x e e)
+    | (and e e)
+    | (or e e)
+
+Prim ::=
+    Add
+    AddC
+    Sub
+    SubC
+    Equal
+    EqualC
+    NullP
+
+κ ∈ Continuation
+  ::= halt-k
+    | rator-k ρ e κ
+    | rand-k ρ v κ
+    | let-k ρ x e κ
+    | and-k ρ e
+    | or-k ρ e
+
+Expr-Config ::= <e, ρ, κ>
+Value-Config ::= <v, κ>
+
+<v, ρ, κ> → <v, κ>
+<x, ρ, κ> → <ρ(x), κ>
+<(lambda x e), ρ, κ> → <Closure ρ x e, κ>
+<(e1 e2), ρ, κ> → <e1, ρ, rator-k ρ e2 κ>
+<(let x e1 e2), ρ, κ> → <e1, ρ, let-k ρ x e2 κ>
+<(letrec x1 x2 e1 e2, ρ, κ> → <e2, ρ2, κ>
+  where ρ2 = extend(ρ, x1, Closure ρ2 x2 e1)
+<(and e1 e2), ρ, κ> → <e1, ρ, and-k ρ e2>
+<(or e1 e2), ρ, κ> → <e1, ρ, or-k ρ e2>
+
+<v, rator-k ρ e κ> → <e, ρ, rand-k ρ v κ>
+<v1, rand-k ρ v2 κ> → <apply(v2, v1), κ>
+<v, let-k ρ x e κ> → <e, extend(ρ, x, v), κ>
+<#f, and-k ρ e κ> → <#f, κ>
+<v, and-k ρ e κ> → <e, ρ, κ>
+<#f, or-k ρ e κ> → <e, ρ, κ>
+<v, or-k ρ e κ> → <v, κ>
+
+======================================================================
 
 v ∈ Value
   ::= Real
