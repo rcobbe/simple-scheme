@@ -1,9 +1,16 @@
 #![allow(dead_code)]
 
+use std::cell::RefCell;
 use std::rc::{Rc, Weak};
 
 #[derive(PartialEq, Eq, Clone)]
 pub struct Id(String);
+
+impl Id {
+    pub fn new(s: &str) -> Id {
+        Id(s.to_string())
+    }
+}
 
 pub enum Value {
     Int(i32),
@@ -30,6 +37,7 @@ pub enum Primitive {
     Cdr,
 }
 
+#[derive(PartialEq)]
 pub enum Expr {
     Int(i32),
     String(String),
@@ -89,7 +97,24 @@ pub enum Continuation {
     },
 }
 
+trait PtrEq {
+    // associated function so we can implement this trait for Rc<T>
+    fn ptr_eq(lhs: &Self, rhs: &Self) -> bool;
+}
+
+impl<T> PtrEq for Rc<T> {
+    fn ptr_eq(lhs: &Rc<T>, rhs: &Rc<T>) -> bool {
+        Rc::as_ptr(lhs) == Rc::as_ptr(rhs)
+    }
+}
+
 pub struct Env(Rc<PEnv>);
+
+impl PtrEq for Env {
+    fn ptr_eq(lhs: &Env, rhs: &Env) -> bool {
+        PtrEq::ptr_eq(&lhs.0, &rhs.0)
+    }
+}
 
 impl Clone for Env {
     fn clone(&self) -> Self {
@@ -105,10 +130,14 @@ enum PEnv {
 enum EnvValue {
     Raw(Rc<Value>),
     RecFun {
-        env: Weak<PEnv>,
+        env: RefCell<Weak<PEnv>>,
         arg: Id,
         body: Rc<Expr>,
     },
+}
+
+pub fn empty() -> Env {
+    Env(Rc::new(PEnv::Empty))
 }
 
 // Return value bound to `id` in `env`; returns None if binding not found.
@@ -123,7 +152,7 @@ fn lookup_private(env: Rc<PEnv>, id: &Id) -> Option<Rc<Value>> {
         PEnv::Empty => None,
         PEnv::Rib(rib_id, EnvValue::Raw(val), _) if id == rib_id => Some(Rc::clone(val)),
         PEnv::Rib(rib_id, EnvValue::RecFun { env, arg, body }, _) if id == rib_id => {
-            match env.upgrade() {
+            match env.borrow().upgrade() {
                 None => panic!("unable to upgrade RecFun's environment"),
                 Some(e) => Some(Rc::new(Value::Closure(
                     Env(e),
@@ -144,15 +173,72 @@ pub fn extend(env: Env, id: Id, value: Rc<Value>) -> Env {
 // Extends `env` with a binding for `id` to a recursive function with argument `arg`
 // and body `body`.
 pub fn extend_rec(env: Env, id: Id, arg: Id, body: Rc<Expr>) -> Env {
-    Env(Rc::new_cyclic(|new_env| {
+    let new_env = Rc::new(
         PEnv::Rib(
             id,
             EnvValue::RecFun {
-                env: new_env.clone(),
+                env: RefCell::new(Weak::new()),
                 arg,
                 body,
             },
             env.0.clone(),
-        )
-    }))
+        ));
+    match &*new_env {
+        PEnv::Rib(_, EnvValue::RecFun { env: env_ptr, .. }, _) => {
+            env_ptr.replace(Rc::downgrade(&new_env));
+            Env(new_env)
+        },
+        _ => panic!("bad env"),
+    }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn lookup_in_empty() {
+        assert!(lookup(empty(), &Id::new("x")).is_none())
+    }
+
+    #[test]
+    fn lookup_simple() {
+        let val = Rc::new(Value::Int(3));
+        let env = extend(empty(), Id::new("x"), Rc::clone(&val));
+        assert!(
+            match lookup(env, &Id::new("x")) {
+                Some(v) => Rc::as_ptr(&v) == Rc::as_ptr(&val),
+                _ => false
+            }
+        )
+    }
+
+    #[test]
+    fn lookup_rec() {
+        let id = Id::new("f");
+        let arg = Id::new("x");
+        let body = Rc::new(Expr::App {
+            rator: Rc::new(Expr::Id(id.clone())),
+            rand: Rc::new(Expr::Id(arg.clone())),
+        });
+        let env = extend_rec(empty(), id.clone(), arg.clone(), Rc::clone(&body));
+        assert!(
+            match lookup(env.clone(), &id) {
+                None => false,
+                Some(v) => {
+                    match &*v {
+                        Value::Closure(value_env, value_arg, value_body) => {
+                            PtrEq::ptr_eq(&env, &value_env) &&
+                                &arg == value_arg &&
+                                PtrEq::ptr_eq(&body, value_body)
+                        }
+                        _ => false
+                    }
+                }
+            }
+        )
+    }
+}
+
+
+            // make lookup take an &Env
