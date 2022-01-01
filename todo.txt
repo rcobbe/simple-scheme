@@ -1,3 +1,0 @@
-- install rust
-- set up directory structure
-- rust mode for emacs
