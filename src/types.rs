@@ -176,21 +176,20 @@ impl Env {
     // Extends `env` with a binding for `id` to a recursive function with argument `arg`
     // and body `body`.
     pub fn extend_rec(id: Id, arg: Id, body: Rc<Expr>, env: &Env) -> Env {
-        let new_env = Rc::new(
-            PEnv::Rib(
-                id,
-                EnvValue::RecFun {
-                    env: RefCell::new(Weak::new()),
-                    arg,
-                    body,
-                },
-                env.0.clone(),
-            ));
+        let new_env = Rc::new(PEnv::Rib(
+            id,
+            EnvValue::RecFun {
+                env: RefCell::new(Weak::new()),
+                arg,
+                body,
+            },
+            env.0.clone(),
+        ));
         match &*new_env {
             PEnv::Rib(_, EnvValue::RecFun { env: env_ptr, .. }, _) => {
                 env_ptr.replace(Rc::downgrade(&new_env));
                 Env(new_env)
-            },
+            }
             _ => panic!("bad env"),
         }
     }
@@ -209,12 +208,10 @@ mod tests {
     fn lookup_simple() {
         let val = Rc::new(Value::Int(3));
         let env = Env::extend(Id::new("x"), Rc::clone(&val), &Env::empty());
-        assert!(
-            match env.lookup(&Id::new("x")) {
-                Some(v) => Rc::as_ptr(&v) == Rc::as_ptr(&val),
-                _ => false
-            }
-        )
+        assert!(match env.lookup(&Id::new("x")) {
+            Some(v) => Rc::as_ptr(&v) == Rc::as_ptr(&val),
+            _ => false,
+        })
     }
 
     #[test]
@@ -226,20 +223,18 @@ mod tests {
             rand: Rc::new(Expr::Id(arg.clone())),
         });
         let env = Env::extend_rec(id.clone(), arg.clone(), Rc::clone(&body), &Env::empty());
-        assert!(
-            match env.lookup(&id) {
-                None => false,
-                Some(v) => {
-                    match &*v {
-                        Value::Closure(value_env, value_arg, value_body) => {
-                            PtrEq::ptr_eq(&env, &value_env) &&
-                                &arg == value_arg &&
-                                PtrEq::ptr_eq(&body, value_body)
-                        }
-                        _ => false
+        assert!(match env.lookup(&id) {
+            None => false,
+            Some(v) => {
+                match &*v {
+                    Value::Closure(value_env, value_arg, value_body) => {
+                        PtrEq::ptr_eq(&env, &value_env)
+                            && &arg == value_arg
+                            && PtrEq::ptr_eq(&body, value_body)
                     }
+                    _ => false,
                 }
             }
-        )
+        })
     }
 }
