@@ -166,13 +166,13 @@ fn lookup_private(env: Rc<PEnv>, id: &Id) -> Option<Rc<Value>> {
 }
 
 // Extends `env` with a binding for `id` to a non-recursive function value.
-pub fn extend(env: Env, id: Id, value: Rc<Value>) -> Env {
+pub fn extend(id: Id, value: Rc<Value>, env: &Env) -> Env {
     Env(Rc::new(PEnv::Rib(id, EnvValue::Raw(value), env.0.clone())))
 }
 
 // Extends `env` with a binding for `id` to a recursive function with argument `arg`
 // and body `body`.
-pub fn extend_rec(env: Env, id: Id, arg: Id, body: Rc<Expr>) -> Env {
+pub fn extend_rec(id: Id, arg: Id, body: Rc<Expr>, env: &Env) -> Env {
     let new_env = Rc::new(
         PEnv::Rib(
             id,
@@ -204,7 +204,7 @@ mod tests {
     #[test]
     fn lookup_simple() {
         let val = Rc::new(Value::Int(3));
-        let env = extend(empty(), Id::new("x"), Rc::clone(&val));
+        let env = extend(Id::new("x"), Rc::clone(&val), &empty());
         assert!(
             match lookup(env, &Id::new("x")) {
                 Some(v) => Rc::as_ptr(&v) == Rc::as_ptr(&val),
@@ -221,7 +221,7 @@ mod tests {
             rator: Rc::new(Expr::Id(id.clone())),
             rand: Rc::new(Expr::Id(arg.clone())),
         });
-        let env = extend_rec(empty(), id.clone(), arg.clone(), Rc::clone(&body));
+        let env = extend_rec(id.clone(), arg.clone(), Rc::clone(&body), &empty());
         assert!(
             match lookup(env.clone(), &id) {
                 None => false,
@@ -239,6 +239,3 @@ mod tests {
         )
     }
 }
-
-
-            // make lookup take an &Env

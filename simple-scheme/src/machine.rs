@@ -32,7 +32,7 @@ fn value_step(vc: ValueConfig) -> Config {
         Continuation::Rand { env, rator, k } => apply(Rc::clone(rator), value, Rc::clone(k)),
         Continuation::Let { env, id, body, k } => Config::Expr(ExprConfig {
             expr: Rc::clone(body),
-            env: extend(env.clone(), id.clone(), value),
+            env: extend(id.clone(), value, env),
             k: Rc::clone(k),
         }),
         Continuation::And { env, arg, k } => match &*value {
@@ -64,7 +64,7 @@ fn apply(rator: Rc<Value>, rand: Rc<Value>, k: Rc<Continuation>) -> Config {
     match (&*rator, &*rand) {
         (Value::Closure(env, id, body), _) => Config::Expr(ExprConfig {
             expr: Rc::clone(body),
-            env: extend(env.clone(), id.clone(), Rc::clone(&rand)),
+            env: extend(id.clone(), Rc::clone(&rand), env),
             k,
         }),
         (Value::Prim(Primitive::Add), Value::Int(n)) => Config::Value(ValueConfig {
